@@ -1,9 +1,8 @@
 package com.apm.gateway.service;
 
-import io.quarkus.runtime.ShutdownEvent;
-import io.quarkus.runtime.StartupEvent;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -15,8 +14,6 @@ import org.jboss.logging.Logger;
 
 import java.time.Instant;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 
 /**
@@ -33,7 +30,8 @@ public class KafkaProducerService {
     private KafkaProducer<String, byte[]> binaryProducer;
     private KafkaProducer<String, String> stringProducer;
 
-    void onStart(@Observes StartupEvent ev) {
+    @PostConstruct
+    void init() {
         // Create binary producer for byte[] payloads
         Properties binaryProps = new Properties();
         binaryProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -61,7 +59,8 @@ public class KafkaProducerService {
         LOG.info("KafkaProducerService initialized with blocking KafkaProducer");
     }
 
-    void onStop(@Observes ShutdownEvent ev) {
+    @PreDestroy
+    void shutdown() {
         if (binaryProducer != null) {
             binaryProducer.flush();
             binaryProducer.close();
@@ -79,6 +78,10 @@ public class KafkaProducerService {
      * instead of blocking OS thread
      */
     public void send(String topic, String key, byte[] payload) {
+        if (binaryProducer == null) {
+            LOG.warn("[Kafka] Binary producer not ready; dropping message");
+            return;
+        }
         try {
             // Normalize topic name
             String normalizedTopic = normalizeTopicName(topic);
@@ -105,6 +108,10 @@ public class KafkaProducerService {
      * instead of blocking OS thread
      */
     public void send(String topic, String key, String message) {
+        if (stringProducer == null) {
+            LOG.warn("[Kafka] String producer not ready; dropping message");
+            return;
+        }
         try {
             // Normalize topic name
             String normalizedTopic = normalizeTopicName(topic);
