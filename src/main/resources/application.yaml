@@ -26,7 +26,7 @@ mp:
         bootstrap.servers: ${kafka.bootstrap.servers}
         key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
         value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-        group.id: device-command-consumer-test
+        group.id: ${GATEWAY_SERVICE_GROUP_ID:device-command-consumer-test}
         auto.offset.reset: latest
 
 quarkus:
@@ -37,7 +37,10 @@ quarkus:
     username: ptuser
     password: "1234"
     jdbc:
+      enabled: false
       url: jdbc:postgresql://localhost:5432/apmconnect
+    health:
+      enabled: false
   http:
     port: 8080
 
