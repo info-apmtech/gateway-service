@@ -1,0 +1,48 @@
+gateway:
+  port: 8225
+  buffer-size: 1024
+  node-id: "gateway#1"
+  report-interval-seconds: 15
+
+kafka:
+  bootstrap:
+    servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  input-topic: gps.raw.data
+  unknown-topic: gps.raw.data.unknown
+  command-topic: gps.command.to.device
+  send:
+    mode: Batch
+    batch:
+      flush-interval-ms: 100
+      unknown-flush-interval-ms: 50000
+      max-batch-messages: 500
+
+mp:
+  messaging:
+    incoming:
+      gps-command-to-device:
+        connector: smallrye-kafka
+        topic: ${kafka.command-topic}
+        bootstrap.servers: ${kafka.bootstrap.servers}
+        key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        group.id: device-command-consumer-test
+        auto.offset.reset: latest
+
+quarkus:
+  redis:
+    hosts: redis://localhost:6379
+  datasource:
+    db-kind: postgresql
+    username: ptuser
+    password: "1234"
+    jdbc:
+      url: jdbc:postgresql://localhost:5432/apmconnect
+  http:
+    port: 8080
+
+api:
+  key: APM_vltd_GateWay#1
+
+app:
+  version: "1.0.0"

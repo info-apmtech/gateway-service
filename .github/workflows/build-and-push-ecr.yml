@@ -1,0 +1,108 @@
+name: Build and Push to ECR
+
+on:
+  push:
+    branches:
+      - release
+  pull_request:
+    branches:
+      - release
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  AWS_REGION: ${{ vars.AWS_REGION || 'ap-south-1' }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID || vars.AWS_ACCOUNT_ID }}
+  ECR_REPO: prod-gateway-service
+  DOCKER_PLATFORM: ${{ vars.DOCKER_PLATFORM || 'linux/arm64' }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 26
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "26"
+          cache: maven
+
+      - name: Run tests
+        run: ./mvnw -B -ntp test
+
+  # Runs only on push / manual dispatch — NOT on pull_request (open PRs test only).
+  build-and-push:
+    needs: test
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 26
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "26"
+          cache: maven
+
+      - name: Build Quarkus JVM artifact
+        run: ./mvnw -B -ntp package -DskipTests
+
+      - name: Resolve AWS role ARN
+        id: role
+        shell: bash
+        run: |
+          set -euo pipefail
+          role_input="$(echo '${{ secrets.AWS_ROLE_TO_ASSUME }}' | xargs)"
+          if [[ "${role_input}" == arn:aws:iam::*:role/* ]]; then
+            echo "role_arn=${role_input}" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          if [[ -z "${AWS_ACCOUNT_ID:-}" ]]; then
+            echo "AWS_ACCOUNT_ID is required when AWS_ROLE_TO_ASSUME is a role name." >&2
+            exit 1
+          fi
+          echo "role_arn=arn:aws:iam::${AWS_ACCOUNT_ID}:role/${role_input}" >> "${GITHUB_OUTPUT}"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.role.outputs.role_arn }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Ensure ECR repository exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws ecr describe-repositories --repository-names "${ECR_REPO}" >/dev/null 2>&1 \
+            || aws ecr create-repository --repository-name "${ECR_REPO}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push JVM image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./src/main/docker/Dockerfile.jvm
+          push: true
+          platforms: ${{ env.DOCKER_PLATFORM }}
+          provenance: false
+          sbom: false
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO }}:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO }}:latest

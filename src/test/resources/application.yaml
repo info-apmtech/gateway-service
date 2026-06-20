@@ -1,0 +1,11 @@
+# Test profile: no external Kafka, Redis, or PostgreSQL required
+quarkus:
+  datasource:
+    health:
+      enabled: false
+  redis:
+    health:
+      enabled: false
+  messaging:
+    health:
+      enabled: false
