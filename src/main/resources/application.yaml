@@ -10,6 +10,7 @@ kafka:
   input-topic: gps.raw.data.test
   unknown-topic: gps.raw.data.unknown.test
   command-topic: gps.command.to.device.test
+  command-response-topic: gps.command.response.test
   send:
     mode: Batch
     batch:

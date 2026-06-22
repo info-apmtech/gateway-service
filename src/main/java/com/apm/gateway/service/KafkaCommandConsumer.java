@@ -29,6 +29,9 @@ public class KafkaCommandConsumer {
     @ConfigProperty(name = "kafka.command-topic", defaultValue = "gps.command.to.device")
     String commandTopic;
 
+    @ConfigProperty(name = "kafka.command-response-topic", defaultValue = "gps.command.response")
+    String commandResponseTopic;
+
     @Incoming("gps-command-to-device")
     @RunOnVirtualThread
     public void consume(String message) {
@@ -44,7 +47,7 @@ public class KafkaCommandConsumer {
             DeviceCommand status = sessionManager.sendCommandAndReadResponse(cmd);
             if (status != null) {
                 byte[] statusBytes = objectMapper.writeValueAsBytes(status);
-                producer.send("gps.command.response", cmd.getImei(), statusBytes);
+                producer.send(commandResponseTopic, cmd.getImei(), statusBytes);
             }
 
             LOG.infof("[CommandConsumer] Command %s to %s", status, cmd.getImei());
