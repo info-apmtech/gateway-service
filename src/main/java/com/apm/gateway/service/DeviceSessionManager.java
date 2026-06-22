@@ -19,6 +19,8 @@ import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 /**
  * @author Pragalathan M <pragalathanm@gmail.com>
  */
@@ -37,6 +39,10 @@ public class DeviceSessionManager {
     private final ConcurrentHashMap<String, CompletableFuture<String>> pendingTextResponses = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, CompletableFuture<byte[]>> pendingBinaryResponses = new ConcurrentHashMap<>();
 
+
+    @ConfigProperty(name = "nlb-ip", defaultValue = "192.168.36.41")
+    private String nlbIp;
+    
     public int getCount() {
         return sessions.size();
     }
@@ -218,7 +224,9 @@ public class DeviceSessionManager {
             if (session != null && session.getImei() != null) {
                 imeiIndex.remove(session.getImei(), client);
             }
-            LOG.infof("[Session] Client disconnected and removed: %s", client.getRemoteSocketAddress());
+            if (client.getRemoteSocketAddress() == null || !client.getRemoteSocketAddress().toString().contains(nlbIp)) {
+                LOG.infof("[Session] Client disconnected and removed: %s", client.getRemoteSocketAddress());
+            }
         } catch (Exception ex) {
             LOG.errorf(ex, "[Session] Error removing client in session: %s",
                     client.getRemoteSocketAddress());

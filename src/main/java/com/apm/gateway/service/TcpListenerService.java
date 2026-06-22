@@ -36,6 +36,9 @@ public class TcpListenerService {
 
     private static final Logger LOG = Logger.getLogger(TcpListenerService.class);
 
+    @ConfigProperty(name = "nlb-ip", defaultValue = "192.168.36.41")
+    private String nlbIp;
+    
     @Inject
     KafkaProducerService producer;
 
@@ -347,7 +350,9 @@ public class TcpListenerService {
             }
             try {
                 client.close();
-                LOG.infof("[TCP] Client %s disconnected at %s", remoteEndpoint, Instant.now());
+                if (!remoteEndpoint.contains(nlbIp)) {
+                    LOG.infof("[TCP] Client %s disconnected at %s", remoteEndpoint, Instant.now());
+                }
             } catch (IOException e) {
                 LOG.errorf(e, "[TCP] Error closing client %s: %s at %s",
                         remoteEndpoint, e.getMessage(), Instant.now());
