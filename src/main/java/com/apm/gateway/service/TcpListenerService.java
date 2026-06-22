@@ -378,13 +378,13 @@ public class TcpListenerService {
     private void reportActiveDevices() {
         while (running) {
             try {
-                LOG.infof("[TCP] Active devices: %d at %s", sessionManager.getCount(), Instant.now());
+                LOG.infof("[TCP] Active devices: %d", sessionManager.getCount());
                 Thread.sleep(Duration.ofMinutes(1).toMillis());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
             } catch (Exception ex) {
-                LOG.errorf(ex, "[TCP] Error in active devices task at %s", Instant.now());
+                LOG.errorf(ex, "[TCP] Error in active devices task");
             }
         }
     }
