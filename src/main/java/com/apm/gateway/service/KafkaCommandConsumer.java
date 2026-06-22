@@ -45,7 +45,9 @@ public class KafkaCommandConsumer {
             }
 
             DeviceCommand status = sessionManager.sendCommandAndReadResponse(cmd);
-            if (status != null) {
+            if (status != null && status.getResponse() != null
+                    && !status.getResponse().isBlank()
+                    && !status.getResponse().equals("string")) {
                 byte[] statusBytes = objectMapper.writeValueAsBytes(status);
                 producer.send(commandResponseTopic, cmd.getImei(), statusBytes);
             }

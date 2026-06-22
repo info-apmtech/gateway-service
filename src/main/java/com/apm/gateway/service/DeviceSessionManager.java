@@ -113,7 +113,6 @@ public class DeviceSessionManager {
         DeviceSession session = findSessionByImei(command.getImei());
 
         if (session == null || session.getClient() == null || !session.getClient().isConnected()) {
-            command.setResponse("Device Not connected");
             return command;
         }
 
