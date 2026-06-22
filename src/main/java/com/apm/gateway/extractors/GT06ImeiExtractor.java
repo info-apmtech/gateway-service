@@ -1,6 +1,5 @@
 package com.apm.gateway.extractors;
 
-import com.apm.gateway.data.ImeiExtractor;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.jboss.logging.Logger;
 import java.util.Optional;

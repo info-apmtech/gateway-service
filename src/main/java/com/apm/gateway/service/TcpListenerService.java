@@ -1,6 +1,5 @@
 package com.apm.gateway.service;
 
-import com.apm.gateway.data.ImeiExtractor;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -10,6 +9,8 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+
+import com.apm.gateway.extractors.ImeiExtractor;
 
 import java.io.IOException;
 import java.io.OutputStream;

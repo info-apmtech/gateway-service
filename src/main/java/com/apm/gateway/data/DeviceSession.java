@@ -5,12 +5,16 @@ import java.time.Instant;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 
 /**
  * @author Pragalathan M <pragalathanm@gmail.com>
  */
 @Getter
 @Setter
+@ToString
+@EqualsAndHashCode
 public class DeviceSession {
 
     private Socket client;

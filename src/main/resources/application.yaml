@@ -6,10 +6,10 @@ gateway:
 
 kafka:
   bootstrap:
-    servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-  input-topic: gps.raw.data
-  unknown-topic: gps.raw.data.unknown
-  command-topic: gps.command.to.device
+    servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+  input-topic: gps.raw.data.test
+  unknown-topic: gps.raw.data.unknown.test
+  command-topic: gps.command.to.device.test
   send:
     mode: Batch
     batch:
