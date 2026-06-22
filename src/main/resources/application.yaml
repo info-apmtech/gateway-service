@@ -32,15 +32,6 @@ mp:
 quarkus:
   redis:
     hosts: redis://localhost:6379
-  datasource:
-    db-kind: postgresql
-    username: ptuser
-    password: "1234"
-    jdbc:
-      enabled: false
-      url: jdbc:postgresql://localhost:5432/apmconnect
-    health:
-      enabled: false
   http:
     port: 8080
 
