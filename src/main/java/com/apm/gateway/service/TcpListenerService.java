@@ -91,8 +91,8 @@ public class TcpListenerService {
     private SimpleKafkaBatcher unknownBatcher;
 
     private final Path sessionLogPath = Paths.get("session_log.txt");
-    private final Path rawAsciiPath = Paths.get("raw_ascii.txt");
-    private final Path rawHexPath = Paths.get("raw_hex.txt");
+    // private final Path rawAsciiPath = Paths.get("raw_ascii.txt");
+    // private final Path rawHexPath = Paths.get("raw_hex.txt");
 
     void onStart(@Observes StartupEvent ev) {
         extractors = extractorInstance.stream().toList();
@@ -117,10 +117,10 @@ public class TcpListenerService {
     void onStop(@Observes ShutdownEvent ev) {
         running = false;
         if (knownBatcher != null) {
-            knownBatcher.flush();
+            knownBatcher.shutdown();
         }
         if (unknownBatcher != null) {
-            unknownBatcher.flush();
+            unknownBatcher.shutdown();
         }
         if (serverSocket != null && !serverSocket.isClosed()) {
             try {
@@ -160,7 +160,7 @@ public class TcpListenerService {
                     ? client.getRemoteSocketAddress().toString()
                     : "unknown";
 
-            appendToFile(sessionLogPath, String.format("[%s] Client connected: %s%n", Instant.now(), remoteEndpoint));
+            // appendToFile(sessionLogPath, String.format("[%s] Client connected: %s%n", Instant.now(), remoteEndpoint));
 
             // Enable TCP keep-alive
             client.setKeepAlive(true);
@@ -185,9 +185,9 @@ public class TcpListenerService {
                     String hexString = bytesToHex(rawBytes);
 
                     // Log rawBytes
-                    appendToFile(sessionLogPath, String.format("[%s] RawBytes : %s%n", Instant.now(), hexString));
-                    appendToFile(rawAsciiPath, asciiString + "\n");
-                    appendToFile(rawHexPath, hexString + "\n");
+                    // appendToFile(sessionLogPath, String.format("[%s] RawBytes : %s%n", Instant.now(), hexString));
+                    // appendToFile(rawAsciiPath, asciiString + "\n");
+                    // appendToFile(rawHexPath, hexString + "\n");
 
                     packetCount.incrementAndGet();
 

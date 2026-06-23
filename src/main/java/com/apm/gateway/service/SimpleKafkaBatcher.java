@@ -1,12 +1,12 @@
 package com.apm.gateway.service;
 
-import org.jboss.logging.Logger;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Pragalathan M <pragalathanm@gmail.com>
@@ -68,5 +68,22 @@ public class SimpleKafkaBatcher {
             this.key = key;
             this.hex = hex;
         }
+    }
+
+    public void shutdown() {
+        LOG.info("Flushing SimpleKafkaBatcher");
+        try {
+            flush();
+        } catch (Exception e) {
+            LOG.error("Error flushing SimpleKafkaBatcher", e);
+        }
+        LOG.info("Shutting down scheduler for SimpleKafkaBatcher");
+        scheduler.shutdown();
+        try {
+            scheduler.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            LOG.error("Interrupted while waiting for scheduler to terminate", e);
+        }
+        LOG.info("Scheduler for SimpleKafkaBatcher shutdown complete");
     }
 }
