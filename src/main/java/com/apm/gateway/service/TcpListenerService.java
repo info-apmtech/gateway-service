@@ -7,6 +7,7 @@ import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -23,10 +24,12 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -78,6 +81,7 @@ public class TcpListenerService {
 
     private ServerSocket serverSocket;
     private ExecutorService executor;
+    private List<Socket> clients = new ArrayList<>();
     private volatile boolean running = false;
 
     public boolean isLive() {
@@ -115,7 +119,7 @@ public class TcpListenerService {
     }
 
     void onStop(@Observes ShutdownEvent ev) {
-        running = false;
+        
         if (knownBatcher != null) {
             knownBatcher.shutdown();
         }
@@ -128,10 +132,32 @@ public class TcpListenerService {
             } catch (IOException e) {
                 LOG.error("Error closing server socket", e);
             }
+            serverSocket = null;
         }
+        
+        for (Socket client : clients) {
+            try {
+                client.close();
+            } catch (IOException e) {
+                LOG.error("Error closing client", e);
+            }
+        }
+        clients.clear();
         if (executor != null) {
             executor.shutdown();
         }
+
+        try {
+            if (!executor.awaitTermination(30, TimeUnit.SECONDS)) {
+                LOG.warn("Forcing executor shutdown");
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            executor.shutdownNow();
+        }
+        running = false;
+        LOG.info("TCP Listener Service stopped");
     }
 
     private void startTcpListener() {
@@ -141,6 +167,7 @@ public class TcpListenerService {
 
             while (running) {
                 Socket client = serverSocket.accept();
+                clients.add(client);
                 // Handle each client in a new virtual thread
                 executor.submit(() -> handleClient(client));
             }
