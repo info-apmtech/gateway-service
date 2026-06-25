@@ -279,6 +279,20 @@ public class DeviceSessionManager {
         }
     }
 
+    public void shutdown() {
+        LOG.info("Shutting down DeviceSessionManager");
+        for (Socket socket : sessions.keySet()) {
+            try {
+                socket.shutdownInput();
+                socket.shutdownOutput();
+                socket.close();
+            } catch (IOException e) {
+                LOG.error("Error closing client", e);
+            }   
+        }
+        LOG.info("DeviceSessionManager shutdown complete");
+    }
+
     // -------------------------------------------------------------------------
     // GT06 helpers
     // -------------------------------------------------------------------------

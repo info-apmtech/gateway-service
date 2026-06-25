@@ -81,7 +81,6 @@ public class TcpListenerService {
 
     private ServerSocket serverSocket;
     private ExecutorService executor;
-    private List<Socket> clients = new ArrayList<>();
     private volatile boolean running = false;
 
     public boolean isLive() {
@@ -135,14 +134,8 @@ public class TcpListenerService {
             serverSocket = null;
         }
         
-        for (Socket client : clients) {
-            try {
-                client.close();
-            } catch (IOException e) {
-                LOG.error("Error closing client", e);
-            }
-        }
-        clients.clear();
+        sessionManager.shutdown();
+
         if (executor != null) {
             executor.shutdown();
         }
@@ -167,7 +160,6 @@ public class TcpListenerService {
 
             while (running) {
                 Socket client = serverSocket.accept();
-                clients.add(client);
                 // Handle each client in a new virtual thread
                 executor.submit(() -> handleClient(client));
             }
