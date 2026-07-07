@@ -329,8 +329,10 @@ public class TcpListenerService {
 
                         stage = "unknown_sent";
                         String dataUnk = new String(rawBytes, StandardCharsets.US_ASCII).replace("\0", "").trim();
-                        LOG.infof("[TCP] IMEI not found or invalid from %s at %s raw:%s",
+                        if(port != 8226) {
+                            LOG.infof("[TCP] IMEI not found or invalid from %s at %s raw:%s port:%d",
                                 remoteEndpoint, Instant.now(), dataUnk);
+                        }
                     } else {
                         if ("Batch".equals(mode) && knownBatcher != null) {
                             knownBatcher.add(imei, rawBytes);
