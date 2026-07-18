@@ -32,9 +32,9 @@ public class KafkaCommandConsumer {
     @Incoming("devicecommands")
     @RunOnVirtualThread
     public void consume(String message) {
-        LOG.info("KafkaCommandConsumer started on virtual thread " + Thread.currentThread().isVirtual());
         try {
             DeviceCommand cmd = objectMapper.readValue(message, DeviceCommand.class);
+            LOG.info("Command received: " + message + "mapped to: " + cmd);
             if (cmd == null || cmd.getImei() == null || cmd.getImei().isEmpty()
                     || cmd.getCommandHex() == null || cmd.getCommandHex().isEmpty()) {
                 LOG.warn("[CommandConsumer] Invalid command received.");
@@ -46,6 +46,7 @@ public class KafkaCommandConsumer {
                     && !status.getResponse().isBlank()
                     && !status.getResponse().equals("string")) {
                 byte[] statusBytes = objectMapper.writeValueAsBytes(status);
+                LOG.info("Sending response: " + objectMapper.writeValueAsString(status) + " to topic: " + commandResponseTopic);
                 producer.send(commandResponseTopic, cmd.getImei(), statusBytes);
             }
 
