@@ -26,13 +26,10 @@ public class KafkaCommandConsumer {
     @Inject
     ObjectMapper objectMapper;
 
-    @ConfigProperty(name = "kafka.command-topic", defaultValue = "gps.command.to.device")
-    String commandTopic;
-
     @ConfigProperty(name = "kafka.command-response-topic", defaultValue = "gps.command.response")
     String commandResponseTopic;
 
-    @Incoming("gps-command-to-device")
+    @Incoming("devicecommands")
     @RunOnVirtualThread
     public void consume(String message) {
         LOG.info("KafkaCommandConsumer started on virtual thread " + Thread.currentThread().isVirtual());

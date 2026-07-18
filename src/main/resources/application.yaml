@@ -21,14 +21,16 @@ kafka:
 mp:
   messaging:
     incoming:
-      gps-command-to-device:
+      devicecommands:
         connector: smallrye-kafka
         topic: ${kafka.command-topic}
-        bootstrap.servers: ${kafka.bootstrap.servers}
-        key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-        value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
-        group.id: ${GATEWAY_SERVICE_GROUP_ID:device-command-consumer-test}
-        auto.offset.reset: latest
+        # Quote dotted Kafka client keys — unquoted YAML keys like group.id are ignored,
+        # and SmallRye then falls back to quarkus.application.name ("gateway").
+        "bootstrap.servers": ${kafka.bootstrap.servers}
+        "key.deserializer": org.apache.kafka.common.serialization.StringDeserializer
+        "value.deserializer": org.apache.kafka.common.serialization.StringDeserializer
+        "group.id": ${GATEWAY_SERVICE_GROUP_ID:device-command-consumer-test}
+        "auto.offset.reset": latest
 
 quarkus:
   redis:
