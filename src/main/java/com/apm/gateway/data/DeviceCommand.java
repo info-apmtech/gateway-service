@@ -26,7 +26,7 @@ public class DeviceCommand {
     private String commandHex;
 
     @JsonProperty("devicetype")
-    @JsonAlias("DeviceType")
+    @JsonAlias("Devicetype")
     private int devicetype;
 
     @JsonProperty("commandId")
